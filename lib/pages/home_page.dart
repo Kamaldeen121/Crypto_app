@@ -15,6 +15,8 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  bool obsecureText = true;
+  bool showBalance = true;
   @override
   void initState() {
     // TODO: implement initState
@@ -76,7 +78,27 @@ class _HomePageState extends State<HomePage> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        BigText(text: '\$7,466.20'),
+                        Row(
+                          children: [
+                            Row(
+                              children: [
+                                showBalance
+                                    ? BigText(text: '\$7,466.20')
+                                    : BigText(text: '******'),
+                                IconButton(
+                                  icon: Icon(showBalance
+                                      ? Icons.visibility
+                                      : Icons.visibility_off),
+                                  onPressed: () {
+                                    setState(() {
+                                      showBalance = !showBalance;
+                                    });
+                                  },
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                         CircleAvatar(
                           backgroundColor: Colors.white54,
                           child: Image.asset(
