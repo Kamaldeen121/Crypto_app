@@ -1,9 +1,14 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:main_crypto_app/models/chart_model.dart';
 import 'package:main_crypto_app/models/coin_model.dart';
 import 'package:main_crypto_app/widgets/big_text.dart';
 import 'package:main_crypto_app/widgets/small_text.dart';
+import 'package:syncfusion_flutter_charts/charts.dart';
 import 'package:syncfusion_flutter_charts/sparkcharts.dart';
+import 'package:http/http.dart' as http;
 
 class SelectCoinPage extends StatefulWidget {
   final CoinModel coin; // Accept full CoinModel object
@@ -15,7 +20,16 @@ class SelectCoinPage extends StatefulWidget {
 }
 
 class _SelectCoinPageState extends State<SelectCoinPage> {
-  List<String> days = ['D', 'W', 'M', '3M', '6M', 'Y'];
+  late TrackballBehavior trackballBehavior;
+  @override
+  void initState() {
+    getChart();
+    trackballBehavior = TrackballBehavior(
+        enable: true, activationMode: ActivationMode.singleTap);
+    super.initState();
+  }
+
+  //List<String> days = ['D', 'W', 'M', '3M', '6M', 'Y'];
   int currentIndex = 0;
   @override
   Widget build(BuildContext context) {
@@ -117,17 +131,37 @@ class _SelectCoinPageState extends State<SelectCoinPage> {
                 Container(
                   decoration: BoxDecoration(color: Colors.grey.shade300),
                   height: 400.h,
-                  width: double.maxFinite.w,
-                  child: SfSparkLineChart(
-                    trackball: SparkChartTrackball(
-                      activationMode: SparkChartActivationMode.tap,
-                    ),
-                    marker: SparkChartMarker(
-                      displayMode: SparkChartMarkerDisplayMode.low,
-                    ),
-                    labelDisplayMode: SparkChartLabelDisplayMode.high,
-                    data: widget.coin.sparklineIn7d?.price ?? [],
-                  ),
+                  width: double.infinity.w,
+                  child: isRefresh == true
+                      ? Center(
+                          child: CircularProgressIndicator(
+                            color: Color(0xffFBC700),
+                          ),
+                        )
+                      : SfCartesianChart(
+                          trackballBehavior: trackballBehavior,
+                          zoomPanBehavior: ZoomPanBehavior(
+                              enablePinching: true, zoomMode: ZoomMode.x),
+                          series: <CandleSeries>[
+                            CandleSeries<ChartModel, int>(
+                                enableSolidCandles: true,
+                                enableTooltip: true,
+                                bullColor: Colors.green,
+                                bearColor: Colors.red,
+                                dataSource: itemChart,
+                                xValueMapper: (ChartModel sales, _) =>
+                                    sales.time,
+                                lowValueMapper: (ChartModel sales, _) =>
+                                    sales.low,
+                                highValueMapper: (ChartModel sales, _) =>
+                                    sales.high,
+                                openValueMapper: (ChartModel sales, _) =>
+                                    sales.open,
+                                closeValueMapper: (ChartModel sales, _) =>
+                                    sales.close,
+                                animationDuration: 55)
+                          ],
+                        ),
                 ),
                 SizedBox(
                   height: 20.h,
@@ -137,26 +171,36 @@ class _SelectCoinPageState extends State<SelectCoinPage> {
                   child: Padding(
                     padding: const EdgeInsets.only(left: 35).r,
                     child: ListView.builder(
-                        itemCount: days.length,
+                        itemCount: text.length,
                         scrollDirection: Axis.horizontal,
                         itemBuilder: (context, index) {
-                          final selectDays = days[index];
+                          //final selectDays = days[index];
                           //currentIndex = index;
                           return GestureDetector(
                             onTap: () {
-                              currentIndex = index;
-
-                              setState(() {});
-                              // print('tapped+${index}');
+                              setState(() {
+                                textBool = [
+                                  false,
+                                  false,
+                                  false,
+                                  false,
+                                  false,
+                                  false
+                                ];
+                                textBool[index] = true;
+                                setDays(text[index]);
+                                getChart();
+                              });
                             },
                             child: Container(
                               margin: EdgeInsets.only(right: 5).r,
                               height: 50.h,
                               width: 50.w,
-                              color: currentIndex == index
-                                  ? Colors.amber
-                                  : Colors.white24,
-                              child: Center(child: SmallText(text: selectDays)),
+                              color: textBool[index] == true
+                                  ? Color(0xffFBC700).withOpacity(0.3)
+                                  : Colors.transparent,
+                              child:
+                                  Center(child: SmallText(text: text[index])),
                             ),
                           );
                         }),
@@ -243,5 +287,70 @@ class _SelectCoinPageState extends State<SelectCoinPage> {
         ),
       ),
     );
+  }
+
+  List<String> text = ['D', 'W', 'M', '3M', '6M', 'Y'];
+  List<bool> textBool = [false, false, true, false, false, false];
+
+  int days = 30;
+
+  setDays(String txt) {
+    if (txt == 'D') {
+      setState(() {
+        days = 1;
+      });
+    } else if (txt == 'W') {
+      setState(() {
+        days = 7;
+      });
+    } else if (txt == 'M') {
+      setState(() {
+        days = 30;
+      });
+    } else if (txt == '3M') {
+      setState(() {
+        days = 90;
+      });
+    } else if (txt == '6M') {
+      setState(() {
+        days = 180;
+      });
+    } else if (txt == 'Y') {
+      setState(() {
+        days = 365;
+      });
+    }
+  }
+
+  List<ChartModel>? itemChart;
+
+  bool isRefresh = true;
+
+  Future<void> getChart() async {
+    String url =
+        'https://api.coingecko.com/api/v3/coins/${widget.coin.id}/ohlc?vs_currency=usd&days=${days.toString()}';
+
+    setState(() {
+      isRefresh = true;
+    });
+
+    var response = await http.get(Uri.parse(url), headers: {
+      "Content-Type": "application/json",
+      "Accept": "application/json",
+    });
+
+    setState(() {
+      isRefresh = false;
+    });
+    if (response.statusCode == 200) {
+      Iterable x = json.decode(response.body);
+      List<ChartModel> modelList =
+          x.map((e) => ChartModel.fromJson(e)).toList();
+      setState(() {
+        itemChart = modelList;
+      });
+    } else {
+      print(response.statusCode);
+    }
   }
 }

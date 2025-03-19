@@ -130,10 +130,10 @@ class _HomePageState extends State<HomePage> {
                       ),
                       SizedBox(
                         height: 350.h,
-                        child: coinController.isloading
+                        child: coinController.isloading == true
                             ? Center(
                                 child: CircularProgressIndicator(
-                                  color: Colors.amber,
+                                  color: Color(0xffFBC700),
                                 ),
                               )
                             : ListView.builder(
@@ -235,10 +235,10 @@ class _HomePageState extends State<HomePage> {
                       ),
                       SizedBox(
                         height: 140.h,
-                        child: coinController.isloading
+                        child: coinController.isloading == true
                             ? Center(
                                 child: CircularProgressIndicator(
-                                  color: Colors.amber,
+                                  color: Color(0xffFBC700),
                                 ),
                               )
                             : ListView.builder(

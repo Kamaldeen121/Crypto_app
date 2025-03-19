@@ -39,6 +39,7 @@ dependencies:
   flutter_screenutil: ^5.9.3
   sparkline: ^1.0.0
   syncfusion_flutter_charts: ^28.2.11
+  http: ^1.3.0
 
 dev_dependencies:
   flutter_test:

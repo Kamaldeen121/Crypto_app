@@ -8,7 +8,7 @@ class CoinController extends ChangeNotifier {
   CoinServices coinServices;
   CoinController({required this.coinServices});
   List<CoinModel> coinModelList = [];
-  bool isloading = false;
+  bool isloading = true;
   String responseMessage = '';
 
   Future<void> getCoins() async {
