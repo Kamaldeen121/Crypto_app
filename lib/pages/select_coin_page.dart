@@ -131,7 +131,7 @@ class _SelectCoinPageState extends State<SelectCoinPage> {
                 Container(
                   decoration: BoxDecoration(color: Colors.grey.shade300),
                   height: 400.h,
-                  width: double.infinity.w,
+                  width: 1.sw,
                   child: isRefresh == true
                       ? Center(
                           child: CircularProgressIndicator(

@@ -137,7 +137,7 @@ class _HomePageState extends State<HomePage> {
                                 ),
                               )
                             : ListView.builder(
-                                shrinkWrap: false,
+                                shrinkWrap: true,
                                 //physics: NeverScrollableScrollPhysics(),
                                 itemCount: coinController.coinModelList.length,
                                 itemBuilder: (context, index) {
